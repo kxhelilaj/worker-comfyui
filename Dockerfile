@@ -133,6 +133,10 @@ RUN if [ "$MODEL_TYPE" = "flux1-dev-fp8" ]; then \
       wget -q -O models/checkpoints/flux1-dev-fp8.safetensors https://huggingface.co/Comfy-Org/flux1-dev/resolve/main/flux1-dev-fp8.safetensors; \
     fi
 
+RUN if [ "$MODEL_TYPE" = "ponyrealism" ]; then \
+      wget -q -O models/checkpoints/ponyRealism_V23ULTRA.safetensors https://civitai.com/api/download/models/1920896?type=Model&format=SafeTensor&size=full&fp=fp16; \
+    fi
+
 # Stage 3: Final image
 FROM base AS final
 
