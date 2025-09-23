@@ -142,6 +142,7 @@ target "ponyrealism" {
   context = "."
   dockerfile = "Dockerfile"
   target = "final"
+  platforms = ["linux/amd64"]
   args = {
     BASE_IMAGE = "${BASE_IMAGE}"
     COMFYUI_VERSION = "${COMFYUI_VERSION}"
