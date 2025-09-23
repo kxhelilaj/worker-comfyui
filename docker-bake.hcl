@@ -1,5 +1,5 @@
 variable "DOCKERHUB_REPO" {
-  default = "runpod"
+  default = "kxhelilaj"
 }
 
 variable "DOCKERHUB_IMG" {
