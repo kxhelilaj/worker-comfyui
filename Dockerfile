@@ -68,6 +68,24 @@ WORKDIR /comfyui
 # Support for the network volume
 ADD src/extra_model_paths.yaml ./
 
+# Install ComfyUI-Impact-Pack (required for FaceDetailer and related nodes)
+RUN cd custom_nodes && \
+    git clone https://github.com/ltdrdata/ComfyUI-Impact-Pack.git && \
+    cd ComfyUI-Impact-Pack && \
+    uv pip install -r requirements.txt
+
+# Install ComfyUI-Impact-Subpack (additional Impact Pack features)
+RUN cd custom_nodes && \
+    git clone https://github.com/ltdrdata/ComfyUI-Impact-Subpack.git && \
+    cd ComfyUI-Impact-Subpack && \
+    if [ -f requirements.txt ]; then uv pip install -r requirements.txt; fi
+
+# Install additional dependencies for Impact Pack
+RUN uv pip install segment-anything ultralytics
+
+# Create additional model directories for Impact Pack
+RUN mkdir -p models/sams models/ultralytics/bbox models/ultralytics/segm
+
 # Go back to the root
 WORKDIR /
 
@@ -135,7 +153,12 @@ RUN if [ "$MODEL_TYPE" = "flux1-dev-fp8" ]; then \
     fi
 
 RUN if [ "$MODEL_TYPE" = "ponyrealism" ]; then \
-      wget -q -O models/checkpoints/ponyRealism_V23ULTRA.safetensors https://civitai.com/api/download/models/1920896?type=Model&format=SafeTensor&size=full&fp=fp16; \
+      wget -q -O models/checkpoints/ponyRealism_V23ULTRA.safetensors https://civitai.com/api/download/models/1920896?type=Model&format=SafeTensor&size=full&fp=fp16 && \
+      # Download SAM models required by Impact Pack \
+      wget -q -O models/sams/sam_vit_b_01ec64.pth https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth && \
+      # Download YOLO models for face and person detection \
+      wget -q -O models/ultralytics/bbox/face_yolov8m.pt https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m.pt && \
+      wget -q -O models/ultralytics/segm/person_yolov8m-seg.pt https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m-seg.pt; \
     fi
 
 # Stage 3: Final image
