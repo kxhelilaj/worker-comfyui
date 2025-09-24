@@ -68,23 +68,30 @@ WORKDIR /comfyui
 # Support for the network volume
 ADD src/extra_model_paths.yaml ./
 
-# Install ComfyUI-Impact-Pack (required for FaceDetailer and related nodes)
+# Install custom nodes
 RUN cd custom_nodes && \
     git clone https://github.com/ltdrdata/ComfyUI-Impact-Pack.git && \
     cd ComfyUI-Impact-Pack && \
     uv pip install -r requirements.txt
 
-# Install ComfyUI-Impact-Subpack (additional Impact Pack features)
 RUN cd custom_nodes && \
     git clone https://github.com/ltdrdata/ComfyUI-Impact-Subpack.git && \
     cd ComfyUI-Impact-Subpack && \
     if [ -f requirements.txt ]; then uv pip install -r requirements.txt; fi
 
-# Install additional dependencies for Impact Pack
+# Install dependencies
 RUN uv pip install segment-anything ultralytics
 
-# Create additional model directories for Impact Pack
-RUN mkdir -p models/sams models/ultralytics/bbox models/ultralytics/segm
+# Create model directories
+RUN mkdir -p models/checkpoints models/sams models/ultralytics/bbox models/ultralytics/segm
+
+# Download PonyRealism model
+RUN wget -q --header="Authorization: Bearer fd049e4ad21d0da8bed9b3e4a117760e" -O models/checkpoints/ponyRealism_V23ULTRA.safetensors https://civitai.com/api/download/models/1920896?type=Model&format=SafeTensor&size=full&fp=fp16
+
+# Download required models for Impact Pack
+RUN wget -q -O models/sams/sam_vit_b_01ec64.pth https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth
+RUN wget -q -O models/ultralytics/bbox/face_yolov8m.pt https://github.com/ultralytics/yolov8/releases/download/v8.0.0/yolov8m.pt
+RUN wget -q -O models/ultralytics/segm/person_yolov8m-seg.pt https://github.com/ultralytics/yolov8/releases/download/v8.0.0/yolov8m-seg.pt
 
 # Go back to the root
 WORKDIR /
@@ -123,43 +130,14 @@ WORKDIR /comfyui
 # Create necessary directories upfront
 RUN mkdir -p models/checkpoints models/vae models/unet models/clip
 
-# Download checkpoints/vae/unet/clip models to include in image based on model type
-RUN if [ "$MODEL_TYPE" = "sdxl" ]; then \
-      wget -q -O models/checkpoints/sd_xl_base_1.0.safetensors https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors && \
-      wget -q -O models/vae/sdxl_vae.safetensors https://huggingface.co/stabilityai/sdxl-vae/resolve/main/sdxl_vae.safetensors && \
-      wget -q -O models/vae/sdxl-vae-fp16-fix.safetensors https://huggingface.co/madebyollin/sdxl-vae-fp16-fix/resolve/main/sdxl_vae.safetensors; \
-    fi
+# Download PonyRealism and required models
+RUN wget -q --header="Authorization: Bearer fd049e4ad21d0da8bed9b3e4a117760e" -O models/checkpoints/ponyRealism_V23ULTRA.safetensors https://civitai.com/api/download/models/1920896?type=Model&format=SafeTensor&size=full&fp=fp16
 
-RUN if [ "$MODEL_TYPE" = "sd3" ]; then \
-      wget -q --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/checkpoints/sd3_medium_incl_clips_t5xxlfp8.safetensors https://huggingface.co/stabilityai/stable-diffusion-3-medium/resolve/main/sd3_medium_incl_clips_t5xxlfp8.safetensors; \
-    fi
+RUN wget -q -O models/sams/sam_vit_b_01ec64.pth https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth
 
-RUN if [ "$MODEL_TYPE" = "flux1-schnell" ]; then \
-      wget -q --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/unet/flux1-schnell.safetensors https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/flux1-schnell.safetensors && \
-      wget -q -O models/clip/clip_l.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors && \
-      wget -q -O models/clip/t5xxl_fp8_e4m3fn.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors && \
-      wget -q --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/vae/ae.safetensors https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.safetensors; \
-    fi
+RUN wget -q -O models/ultralytics/bbox/face_yolov8m.pt https://github.com/ultralytics/yolov8/releases/download/v8.0.0/yolov8m.pt
 
-RUN if [ "$MODEL_TYPE" = "flux1-dev" ]; then \
-      wget -q --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/unet/flux1-dev.safetensors https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/flux1-dev.safetensors && \
-      wget -q -O models/clip/clip_l.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors && \
-      wget -q -O models/clip/t5xxl_fp8_e4m3fn.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors && \
-      wget -q --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/vae/ae.safetensors https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/ae.safetensors; \
-    fi
-
-RUN if [ "$MODEL_TYPE" = "flux1-dev-fp8" ]; then \
-      wget -q -O models/checkpoints/flux1-dev-fp8.safetensors https://huggingface.co/Comfy-Org/flux1-dev/resolve/main/flux1-dev-fp8.safetensors; \
-    fi
-
-RUN if [ "$MODEL_TYPE" = "ponyrealism" ]; then \
-      wget -q --header"Authorization: Bearer fd049e4ad21d0da8bed9b3e4a117760e" -O models/checkpoints/ponyRealism_V23ULTRA.safetensors https://civitai.com/api/download/models/1920896?type=Model&format=SafeTensor&size=full&fp=fp16 && \
-      # Download SAM models required by Impact Pack \
-      wget -q -O models/sams/sam_vit_b_01ec64.pth https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth && \
-      # Download YOLO models for face and person detection \
-      wget -q -O models/ultralytics/bbox/face_yolov8m.pt https://github.com/ultralytics/yolov8/releases/download/v8.0.0/yolov8m.pt && \
-      wget -q -O models/ultralytics/segm/person_yolov8m-seg.pt https://github.com/ultralytics/yolov8/releases/download/v8.0.0/yolov8m-seg.pt; \
-    fi
+RUN wget -q -O models/ultralytics/segm/person_yolov8m-seg.pt https://github.com/ultralytics/yolov8/releases/download/v8.0.0/yolov8m-seg.pt
 
 # Stage 3: Final image
 FROM base AS final
