@@ -153,12 +153,12 @@ RUN if [ "$MODEL_TYPE" = "flux1-dev-fp8" ]; then \
     fi
 
 RUN if [ "$MODEL_TYPE" = "ponyrealism" ]; then \
-      wget -q -O models/checkpoints/ponyRealism_V23ULTRA.safetensors https://civitai.com/api/download/models/1920896?type=Model&format=SafeTensor&size=full&fp=fp16 && \
+      wget -q --header"Authorization: Bearer fd049e4ad21d0da8bed9b3e4a117760e" -O models/checkpoints/ponyRealism_V23ULTRA.safetensors https://civitai.com/api/download/models/1920896?type=Model&format=SafeTensor&size=full&fp=fp16 && \
       # Download SAM models required by Impact Pack \
       wget -q -O models/sams/sam_vit_b_01ec64.pth https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth && \
       # Download YOLO models for face and person detection \
-      wget -q -O models/ultralytics/bbox/face_yolov8m.pt https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m.pt && \
-      wget -q -O models/ultralytics/segm/person_yolov8m-seg.pt https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m-seg.pt; \
+      wget -q -O models/ultralytics/bbox/face_yolov8m.pt https://github.com/ultralytics/yolov8/releases/download/v8.0.0/yolov8m.pt && \
+      wget -q -O models/ultralytics/segm/person_yolov8m-seg.pt https://github.com/ultralytics/yolov8/releases/download/v8.0.0/yolov8m-seg.pt; \
     fi
 
 # Stage 3: Final image
