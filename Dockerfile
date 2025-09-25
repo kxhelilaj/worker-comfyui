@@ -85,13 +85,6 @@ RUN uv pip install segment-anything ultralytics
 # Create model directories
 RUN mkdir -p models/checkpoints models/sams models/ultralytics/bbox models/ultralytics/segm
 
-# Download PonyRealism model
-RUN wget -q --header="Authorization: Bearer fd049e4ad21d0da8bed9b3e4a117760e" -O models/checkpoints/ponyRealism_V23ULTRA.safetensors https://civitai.com/api/download/models/1920896?type=Model&format=SafeTensor&size=full&fp=fp16
-
-# Download required models for Impact Pack
-RUN wget -q -O models/sams/sam_vit_b_01ec64.pth https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth
-RUN wget -q -O models/ultralytics/bbox/face_yolov8m.pt https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8m.pt
-RUN wget -q -O models/ultralytics/segm/person_yolov8m-seg.pt https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8m-seg.pt
 
 # Go back to the root
 WORKDIR /
@@ -128,7 +121,7 @@ ARG MODEL_TYPE=flux1-dev-fp8
 WORKDIR /comfyui
 
 # Create necessary directories upfront
-RUN mkdir -p models/checkpoints models/vae models/unet models/clip
+RUN mkdir -p models/checkpoints models/vae models/unet models/clip models/sams models/ultralytics/bbox models/ultralytics/segm
 
 # Download PonyRealism and required models
 RUN wget -q --header="Authorization: Bearer fd049e4ad21d0da8bed9b3e4a117760e" -O models/checkpoints/ponyRealism_V23ULTRA.safetensors https://civitai.com/api/download/models/1920896?type=Model&format=SafeTensor&size=full&fp=fp16
