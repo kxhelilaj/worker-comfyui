@@ -90,8 +90,8 @@ RUN wget -q --header="Authorization: Bearer fd049e4ad21d0da8bed9b3e4a117760e" -O
 
 # Download required models for Impact Pack
 RUN wget -q -O models/sams/sam_vit_b_01ec64.pth https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth
-RUN wget -q -O models/ultralytics/bbox/face_yolov8m.pt https://github.com/ultralytics/yolov8/releases/download/v8.0.0/yolov8m.pt
-RUN wget -q -O models/ultralytics/segm/person_yolov8m-seg.pt https://github.com/ultralytics/yolov8/releases/download/v8.0.0/yolov8m-seg.pt
+RUN wget -q -O models/ultralytics/bbox/face_yolov8m.pt https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8m.pt
+RUN wget -q -O models/ultralytics/segm/person_yolov8m-seg.pt https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8m-seg.pt
 
 # Go back to the root
 WORKDIR /
@@ -135,9 +135,9 @@ RUN wget -q --header="Authorization: Bearer fd049e4ad21d0da8bed9b3e4a117760e" -O
 
 RUN wget -q -O models/sams/sam_vit_b_01ec64.pth https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth
 
-RUN wget -q -O models/ultralytics/bbox/face_yolov8m.pt https://github.com/ultralytics/yolov8/releases/download/v8.0.0/yolov8m.pt
+RUN wget -q -O models/ultralytics/bbox/face_yolov8m.pt https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8m.pt
 
-RUN wget -q -O models/ultralytics/segm/person_yolov8m-seg.pt https://github.com/ultralytics/yolov8/releases/download/v8.0.0/yolov8m-seg.pt
+RUN wget -q -O models/ultralytics/segm/person_yolov8m-seg.pt https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8m-seg.pt
 
 # Stage 3: Final image
 FROM base AS final
