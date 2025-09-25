@@ -25,6 +25,7 @@ RUN apt-get update && apt-get install -y \
     python3.12-venv \
     git \
     wget \
+    curl \
     libgl1 \
     libglib2.0-0 \
     libsm6 \
@@ -82,10 +83,6 @@ RUN cd custom_nodes && \
 # Install dependencies
 RUN uv pip install segment-anything ultralytics
 
-# Create model directories
-RUN mkdir -p models/checkpoints models/sams models/ultralytics/bbox models/ultralytics/segm
-
-
 # Go back to the root
 WORKDIR /
 
@@ -125,15 +122,24 @@ RUN mkdir -p models/checkpoints models/vae models/unet models/clip models/sams m
 
 # Download PonyRealism and required models
 RUN echo "Downloading PonyRealism model..." && \
-    wget --header="Authorization: Bearer fd049e4ad21d0da8bed9b3e4a117760e" -O models/checkpoints/ponyRealism_V23ULTRA.safetensors https://civitai.com/api/download/models/1920896?type=Model&format=SafeTensor&size=full&fp=fp16 && \
+    curl -L -J -o models/checkpoints/ponyRealism_V23ULTRA.safetensors -H "Authorization: Bearer fd049e4ad21d0da8bed9b3e4a117760e" "https://civitai.com/api/download/models/1920896?type=Model&format=SafeTensor&size=full&fp=fp16" && \
     echo "Download complete. File size:" && \
     ls -lh models/checkpoints/ponyRealism_V23ULTRA.safetensors
 
-RUN wget -q -O models/sams/sam_vit_b_01ec64.pth https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth
+RUN echo "Downloading SAM model..." && \
+    wget -q -O models/sams/sam_vit_b_01ec64.pth https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth && \
+    echo "SAM model downloaded:" && \
+    ls -lh models/sams/sam_vit_b_01ec64.pth
 
-RUN wget -q -O models/ultralytics/bbox/face_yolov8m.pt https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8m.pt
+RUN echo "Downloading YOLO bbox model..." && \
+    wget -q -O models/ultralytics/bbox/face_yolov8m.pt https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8m.pt && \
+    echo "YOLO bbox model downloaded:" && \
+    ls -lh models/ultralytics/bbox/face_yolov8m.pt
 
-RUN wget -q -O models/ultralytics/segm/person_yolov8m-seg.pt https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8m-seg.pt
+RUN echo "Downloading YOLO segmentation model..." && \
+    wget -q -O models/ultralytics/segm/person_yolov8m-seg.pt https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8m-seg.pt && \
+    echo "YOLO segmentation model downloaded:" && \
+    ls -lh models/ultralytics/segm/person_yolov8m-seg.pt
 
 # Stage 3: Final image
 FROM base AS final
