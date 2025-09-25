@@ -124,7 +124,10 @@ WORKDIR /comfyui
 RUN mkdir -p models/checkpoints models/vae models/unet models/clip models/sams models/ultralytics/bbox models/ultralytics/segm
 
 # Download PonyRealism and required models
-RUN wget -q --header="Authorization: Bearer fd049e4ad21d0da8bed9b3e4a117760e" -O models/checkpoints/ponyRealism_V23ULTRA.safetensors https://civitai.com/api/download/models/1920896?type=Model&format=SafeTensor&size=full&fp=fp16
+RUN echo "Downloading PonyRealism model..." && \
+    wget --header="Authorization: Bearer fd049e4ad21d0da8bed9b3e4a117760e" -O models/checkpoints/ponyRealism_V23ULTRA.safetensors https://civitai.com/api/download/models/1920896?type=Model&format=SafeTensor&size=full&fp=fp16 && \
+    echo "Download complete. File size:" && \
+    ls -lh models/checkpoints/ponyRealism_V23ULTRA.safetensors
 
 RUN wget -q -O models/sams/sam_vit_b_01ec64.pth https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth
 
@@ -137,3 +140,11 @@ FROM base AS final
 
 # Copy models from stage 2 to the final image
 COPY --from=downloader /comfyui/models /comfyui/models
+
+# Verify models are copied correctly
+RUN echo "Models in final image:" && \
+    ls -la /comfyui/models/checkpoints/ && \
+    echo "SAM models:" && \
+    ls -la /comfyui/models/sams/ && \
+    echo "YOLO models:" && \
+    ls -la /comfyui/models/ultralytics/
