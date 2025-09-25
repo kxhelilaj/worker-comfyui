@@ -135,7 +135,7 @@ ARG HUGGINGFACE_ACCESS_TOKEN=${HUGGINGFACE_ACCESS_TOKEN}
 # Set default model type if none is provided
 ARG MODEL_TYPE=flux1-dev-fp8
 
-# Change working directory to ComfyUI
+# Change working directory to ComfyU
 WORKDIR /comfyui
 
 # Create necessary directories upfront
