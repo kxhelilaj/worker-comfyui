@@ -131,6 +131,7 @@ CMD ["/start.sh"]
 FROM base AS downloader
 
 # Build argument for Hugging Face access token
+ENV HUGGINGFACE_ACCESS_TOKEN=${HUGGINGFACE_ACCESS_TOKEN}
 ARG HUGGINGFACE_ACCESS_TOKEN
 # Set default model type if none is provided
 ARG MODEL_TYPE=flux1-dev-fp8
@@ -150,7 +151,7 @@ RUN echo "Downloading PonyRealism model..." && \
 RUN echo "Downloading flux fill model" && \
     curl -L -J -o models/diffusion_models/flux1-fill-dev.safetensors -H "Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" "https://huggingface.co/black-forest-labs/FLUX.1-Fill-dev/resolve/main/flux1-fill-dev.safetensors" && \
     echo "Download complete. File size:" && \
-    ls -lh models/checkpoints/flux1-fill-dev.safetensors
+    ls -lh models/diffusion_models/flux1-fill-dev.safetensors
 
 RUN echo "Downloading flux vae" && \
     curl -L -J -o models/vae/ae.safetensors -H "Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" "https://huggingface.co/ffxvs/vae-flux/resolve/main/ae.safetensors" && \
