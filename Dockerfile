@@ -80,6 +80,26 @@ RUN cd custom_nodes && \
     cd ComfyUI-Impact-Subpack && \
     if [ -f requirements.txt ]; then uv pip install -r requirements.txt; fi
 
+RUN cd custom_nodes && \
+    git clone https://github.com/kijai/ComfyUI-KJNodes.git && \
+    cd ComfyUI-KJNodes && \
+    if [ -f requirements.txt ]; then uv pip install -r requirements.txt; fi
+
+RUN cd custom_nodes && \
+    git clone https://github.com/welltop-cn/ComfyUI-TeaCache.git && \
+    cd ComfyUI-TeaCache && \
+    if [ -f requirements.txt ]; then uv pip install -r requirements.txt; fi
+
+RUN cd custom_nodes && \
+    git clone https://github.com/cubiq/ComfyUI_essentials.git && \
+    cd ComfyUI_essentials && \
+    if [ -f requirements.txt ]; then uv pip install -r requirements.txt; fi
+
+RUN cd custom_nodes && \
+    git clone https://github.com/lquesada/ComfyUI-Inpaint-CropAndStitch.git && \
+    cd ComfyUI-Inpaint-CropAndStitch && \
+    if [ -f requirements.txt ]; then uv pip install -r requirements.txt; fi
+
 # Install dependencies
 RUN uv pip install segment-anything ultralytics
 
@@ -118,13 +138,33 @@ ARG MODEL_TYPE=flux1-dev-fp8
 WORKDIR /comfyui
 
 # Create necessary directories upfront
-RUN mkdir -p models/checkpoints models/vae models/unet models/clip models/sams models/ultralytics/bbox models/ultralytics/segm
+RUN mkdir -p models/checkpoints models/diffusion_models models/text_encoders models/vae models/unet models/clip models/sams models/ultralytics/bbox models/ultralytics/segm
 
 # Download PonyRealism and required models
 RUN echo "Downloading PonyRealism model..." && \
     curl -L -J -o models/checkpoints/ponyRealism_V23ULTRA.safetensors -H "Authorization: Bearer fd049e4ad21d0da8bed9b3e4a117760e" "https://civitai.com/api/download/models/1920896?type=Model&format=SafeTensor&size=full&fp=fp16" && \
     echo "Download complete. File size:" && \
     ls -lh models/checkpoints/ponyRealism_V23ULTRA.safetensors
+
+RUN echo "Downloading flux fill model" && \
+    curl -L -J -o models/diffusion_models/flux1-fill-dev.safetensors -H "Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" "https://huggingface.co/black-forest-labs/FLUX.1-Fill-dev/resolve/main/flux1-fill-dev.safetensors" && \
+    echo "Download complete. File size:" && \
+    ls -lh models/checkpoints/flux1-fill-dev.safetensors
+
+RUN echo "Downloading flux vae" && \
+    curl -L -J -o models/vae/ae.safetensors -H "Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" "https://huggingface.co/ffxvs/vae-flux/resolve/main/ae.safetensors" && \
+    echo "Download complete. File size:" && \
+    ls -lh models/vae/ae.safetensors
+
+RUN echo "Downloading text encoder" && \
+    curl -L -J -o models/text_encoders/t5xxl_fp16.safetensors -H "Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp16.safetensors" && \
+    echo "Download complete. File size:" && \
+    ls -lh models/text_encoders/t5xxl_fp16.safetensors
+
+RUN echo "Downloading clip l..." && \
+    curl -L -J -o models/clip/clip_l.safetensors -H "Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors" && \
+    echo "Download complete. File size:" && \
+    ls -lh models/clip/clip_l.safetensors
 
 RUN echo "Downloading SAM model..." && \
     wget -q -O models/sams/sam_vit_b_01ec64.pth https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth && \
