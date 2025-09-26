@@ -130,8 +130,10 @@ CMD ["/start.sh"]
 # Stage 2: Download models
 FROM base AS downloader
 
-# Build argument for Hugging Face access token - will pick up from environment
-ARG HUGGINGFACE_ACCESS_TOKEN=${HUGGINGFACE_ACCESS_TOKEN}
+# Build argument for Hugging Face access token with default from env
+ARG HUGGINGFACE_ACCESS_TOKEN
+# Set as environment variable so it can be used in RUN commands
+ENV HUGGINGFACE_ACCESS_TOKEN=${HUGGINGFACE_ACCESS_TOKEN:-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}
 # Set default model type if none is provided
 ARG MODEL_TYPE=flux1-dev-fp8
 
