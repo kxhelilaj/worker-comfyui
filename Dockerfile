@@ -179,6 +179,11 @@ RUN echo "Downloading YOLO bbox model..." && \
     echo "YOLO bbox model downloaded:" && \
     ls -lh models/ultralytics/bbox/face_yolov8m.pt
 
+RUN echo "Downloading YOLO segm face_yolov8m..." && \
+    wget -q -O models/ultralytics/segm/face_yolov8m-seg_60.pt https://huggingface.co/24xx/segm/resolve/main/face_yolov8m-seg_60.pt && \
+    echo "YOLO segm face_yolov8m model downloaded:" && \
+    ls -lh models/ultralytics/segm/face_yolov8m-seg_60.pt
+
 RUN echo "Downloading YOLO segmentation model..." && \
     wget -q -O models/ultralytics/segm/person_yolov8m-seg.pt https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8m-seg.pt && \
     echo "YOLO segmentation model downloaded:" && \
