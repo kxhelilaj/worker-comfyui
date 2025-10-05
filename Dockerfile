@@ -100,6 +100,11 @@ RUN cd custom_nodes && \
     cd ComfyUI-Inpaint-CropAndStitch && \
     if [ -f requirements.txt ]; then uv pip install -r requirements.txt; fi
 
+RUN cd custom_nodes && \
+    git clone https://github.com/rgthree/rgthree-comfy.git && \
+    cd rgthree-comfy && \
+    if [ -f requirements.txt ]; then uv pip install -r requirements.txt; fi
+
 # Install dependencies
 RUN uv pip install segment-anything ultralytics
 
@@ -133,7 +138,7 @@ FROM base AS downloader
 # Build argument for Hugging Face access token with default from env
 ARG HUGGINGFACE_ACCESS_TOKEN
 # Set as environment variable so it can be used in RUN commands
-ENV HUGGINGFACE_ACCESS_TOKEN=${HUGGINGFACE_ACCESS_TOKEN:-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}
+ENV HUGGINGFACE_ACCESS_TOKEN=${HUGGINGFACE_ACCESS_TOKEN:-YOUR_HUGGINGFACE_TOKEN_HERE}
 # Set default model type if none is provided
 ARG MODEL_TYPE=flux1-dev-fp8
 
@@ -141,7 +146,7 @@ ARG MODEL_TYPE=flux1-dev-fp8
 WORKDIR /comfyui
 
 # Create necessary directories upfront
-RUN mkdir -p models/checkpoints models/diffusion_models models/text_encoders models/vae models/unet models/clip models/sams models/ultralytics/bbox models/ultralytics/segm
+RUN mkdir -p models/checkpoints models/diffusion_models models/text_encoders models/vae models/unet models/clip models/sams models/ultralytics/bbox models/ultralytics/segm models/loras
 
 # Download PonyRealism and required models
 RUN echo "Downloading PonyRealism model..." && \
@@ -188,6 +193,16 @@ RUN echo "Downloading YOLO segmentation model..." && \
     wget -q -O models/ultralytics/segm/person_yolov8m-seg.pt https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8m-seg.pt && \
     echo "YOLO segmentation model downloaded:" && \
     ls -lh models/ultralytics/segm/person_yolov8m-seg.pt
+
+RUN echo "Downloading portrait lora..." && \
+    curl -L -J -o models/loras/comfyui_portrait_lora64.safetensors -H "Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" "https://huggingface.co/Pandorala/PortraitLora/resolve/main/comfyui_portrait_lora64.safetensors" && \
+    echo "Download complete. File size:" && \
+    ls -lh models/loras/comfyui_portrait_lora64.safetensors
+
+RUN echo "Downloading face lora..." && \
+    curl -L -J -o models/loras/diffusion_pytorch_model.safetensors -H "Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" "https://huggingface.co/Pandorala/PortraitLora/resolve/main/diffusion_pytorch_model.safetensors" && \
+    echo "Download complete. File size:" && \
+    ls -lh models/loras/diffusion_pytorch_model.safetensors
 
 # Stage 3: Final image
 FROM base AS final
