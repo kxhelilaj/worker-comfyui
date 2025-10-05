@@ -138,7 +138,7 @@ FROM base AS downloader
 # Build argument for Hugging Face access token with default from env
 ARG HUGGINGFACE_ACCESS_TOKEN
 # Set as environment variable so it can be used in RUN commands
-ENV HUGGINGFACE_ACCESS_TOKEN=${HUGGINGFACE_ACCESS_TOKEN:-YOUR_HUGGINGFACE_TOKEN_HERE}
+ENV HUGGINGFACE_ACCESS_TOKEN=${HUGGINGFACE_ACCESS_TOKEN:-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}
 # Set default model type if none is provided
 ARG MODEL_TYPE=flux1-dev-fp8
 
@@ -188,6 +188,11 @@ RUN echo "Downloading YOLO segm face_yolov8m..." && \
     wget -q -O models/ultralytics/segm/face_yolov8m-seg_60.pt https://huggingface.co/24xx/segm/resolve/main/face_yolov8m-seg_60.pt && \
     echo "YOLO segm face_yolov8m model downloaded:" && \
     ls -lh models/ultralytics/segm/face_yolov8m-seg_60.pt
+
+RUN echo "Downloading YOLO segm face_yolov8n..." && \
+    wget -q -O models/ultralytics/segm/face_yolov8n-seg2_60.pt https://huggingface.co/jags/yolov8_model_segmentation-set/resolve/main/face_yolov8n-seg2_60.pt && \
+    echo "YOLO segm face_yolov8n model downloaded:" && \
+    ls -lh models/ultralytics/segm/face_yolov8n-seg2_60.pt
 
 RUN echo "Downloading YOLO segmentation model..." && \
     wget -q -O models/ultralytics/segm/person_yolov8m-seg.pt https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8m-seg.pt && \
