@@ -222,3 +222,5 @@ RUN echo "Models in final image:" && \
     ls -la /comfyui/models/sams/ && \
     echo "YOLO models:" && \
     ls -la /comfyui/models/ultralytics/
+    echo "Loras:" && \
+    ls -la /comfyui/models/loras/
