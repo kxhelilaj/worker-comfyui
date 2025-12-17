@@ -105,6 +105,12 @@ RUN cd custom_nodes && \
     cd rgthree-comfy && \
     if [ -f requirements.txt ]; then uv pip install -r requirements.txt; fi
 
+# RES4LYF - ClownSampler, T5TokenizerOptions, Sigmas Rescale, and advanced samplers
+RUN cd custom_nodes && \
+    git clone https://github.com/ClownsharkBatwing/RES4LYF.git && \
+    cd RES4LYF && \
+    if [ -f requirements.txt ]; then uv pip install -r requirements.txt; fi
+
 # Install dependencies
 RUN uv pip install segment-anything ultralytics
 
@@ -135,10 +141,8 @@ CMD ["/start.sh"]
 # Stage 2: Download models
 FROM base AS downloader
 
-# Build argument for Hugging Face access token with default from env
-ARG HUGGINGFACE_ACCESS_TOKEN
-# Set as environment variable so it can be used in RUN commands
-ENV HUGGINGFACE_ACCESS_TOKEN=${HUGGINGFACE_ACCESS_TOKEN:-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}
+# CivitAI access token for downloading models
+ENV CIVITAI_ACCESS_TOKEN=fd049e4ad21d0da8bed9b3e4a117760e
 # Set default model type if none is provided
 ARG MODEL_TYPE=flux1-dev-fp8
 
@@ -146,68 +150,87 @@ ARG MODEL_TYPE=flux1-dev-fp8
 WORKDIR /comfyui
 
 # Create necessary directories upfront
-RUN mkdir -p models/checkpoints models/diffusion_models models/text_encoders models/vae models/unet models/clip models/sams models/ultralytics/bbox models/ultralytics/segm models/loras
+RUN mkdir -p models/checkpoints/Pony models/diffusion_models models/text_encoders models/vae models/sams models/ultralytics/bbox models/loras/Chroma
 
-# Download PonyRealism and required models
-RUN echo "Downloading PonyRealism model..." && \
-    curl -L -J -o models/checkpoints/ponyRealism_V23ULTRA.safetensors -H "Authorization: Bearer fd049e4ad21d0da8bed9b3e4a117760e" "https://civitai.com/api/download/models/1920896?type=Model&format=SafeTensor&size=full&fp=fp16" && \
+# ============================================
+# CHROMA WORKFLOW MODELS
+# ============================================
+
+# Chroma-DC-2K model (main diffusion model)
+RUN echo "Downloading Chroma-DC-2K model..." && \
+    curl -L -J -o models/diffusion_models/Chroma-DC-2K.safetensors "https://huggingface.co/silveroxides/Chroma-Misc-Models/resolve/main/Chroma-DC-2K/Chroma-DC-2K.safetensors" && \
     echo "Download complete. File size:" && \
-    ls -lh models/checkpoints/ponyRealism_V23ULTRA.safetensors
+    ls -lh models/diffusion_models/Chroma-DC-2K.safetensors
 
-RUN echo "Downloading flux fill model" && \
-    curl -L -J -o models/diffusion_models/flux1-fill-dev.safetensors -H "Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" "https://huggingface.co/black-forest-labs/FLUX.1-Fill-dev/resolve/main/flux1-fill-dev.safetensors" && \
+# gonzalomoXLFluxPony checkpoint (refiner)
+RUN echo "Downloading gonzalomoXLFluxPony checkpoint..." && \
+    curl -L -J -o "models/checkpoints/Pony/gonzalomoXLFluxPony_v60PhotoXLDMD.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2196785?type=Model&format=SafeTensor&size=pruned&fp=fp16" && \
     echo "Download complete. File size:" && \
-    ls -lh models/diffusion_models/flux1-fill-dev.safetensors
+    ls -lh "models/checkpoints/Pony/gonzalomoXLFluxPony_v60PhotoXLDMD.safetensors"
 
-RUN echo "Downloading flux vae" && \
-    curl -L -J -o models/vae/ae.safetensors -H "Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" "https://huggingface.co/ffxvs/vae-flux/resolve/main/ae.safetensors" && \
+# FLUX.1-dev VAE
+RUN echo "Downloading FLUX.1-dev VAE..." && \
+    curl -L -J -o models/vae/FLUX.1-dev-vae.safetensors "https://huggingface.co/lovis93/testllm/resolve/ed9cf1af7465cebca4649157f118e331cf2a084f/ae.safetensors" && \
     echo "Download complete. File size:" && \
-    ls -lh models/vae/ae.safetensors
+    ls -lh models/vae/FLUX.1-dev-vae.safetensors
 
-RUN echo "Downloading text encoder" && \
-    curl -L -J -o models/text_encoders/t5xxl_fp16.safetensors -H "Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp16.safetensors" && \
+# T5XXL text encoder (for Chroma)
+RUN echo "Downloading text encoder t5xxl_fp16..." && \
+    curl -L -J -o models/text_encoders/t5xxl_fp16.safetensors "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp16.safetensors" && \
     echo "Download complete. File size:" && \
     ls -lh models/text_encoders/t5xxl_fp16.safetensors
 
-RUN echo "Downloading clip l..." && \
-    curl -L -J -o models/clip/clip_l.safetensors -H "Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors" && \
-    echo "Download complete. File size:" && \
-    ls -lh models/clip/clip_l.safetensors
-
+# SAM model for FaceDetailer
 RUN echo "Downloading SAM model..." && \
     wget -q -O models/sams/sam_vit_b_01ec64.pth https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth && \
     echo "SAM model downloaded:" && \
     ls -lh models/sams/sam_vit_b_01ec64.pth
 
-RUN echo "Downloading YOLO bbox model..." && \
-    wget -q -O models/ultralytics/bbox/face_yolov8m.pt https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8m.pt && \
-    echo "YOLO bbox model downloaded:" && \
-    ls -lh models/ultralytics/bbox/face_yolov8m.pt
+# face_yolov9c for FaceDetailer
+RUN echo "Downloading face_yolov9c..." && \
+    wget -q -O models/ultralytics/bbox/face_yolov9c.pt "https://huggingface.co/amirgame197/face_yolov9c.pt/resolve/main/face_yolov9c.pt" && \
+    echo "face_yolov9c downloaded:" && \
+    ls -lh models/ultralytics/bbox/face_yolov9c.pt
 
-RUN echo "Downloading YOLO segm face_yolov8m..." && \
-    wget -q -O models/ultralytics/segm/face_yolov8m-seg_60.pt https://huggingface.co/24xx/segm/resolve/main/face_yolov8m-seg_60.pt && \
-    echo "YOLO segm face_yolov8m model downloaded:" && \
-    ls -lh models/ultralytics/segm/face_yolov8m-seg_60.pt
+# ============================================
+# CHROMA LORAS
+# ============================================
 
-RUN echo "Downloading YOLO segm face_yolov8n..." && \
-    wget -q -O models/ultralytics/segm/face_yolov8n-seg2_60.pt https://huggingface.co/jags/yolov8_model_segmentation-set/resolve/main/face_yolov8n-seg2_60.pt && \
-    echo "YOLO segm face_yolov8n model downloaded:" && \
-    ls -lh models/ultralytics/segm/face_yolov8n-seg2_60.pt
-
-RUN echo "Downloading YOLO segmentation model..." && \
-    wget -q -O models/ultralytics/segm/person_yolov8m-seg.pt https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8m-seg.pt && \
-    echo "YOLO segmentation model downloaded:" && \
-    ls -lh models/ultralytics/segm/person_yolov8m-seg.pt
-
-RUN echo "Downloading portrait lora..." && \
-    curl -L -J -o models/loras/comfyui_portrait_lora64.safetensors -H "Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" "https://huggingface.co/Pandorala/PortraitLora/resolve/main/comfyui_portrait_lora64.safetensors" && \
+# 1. Chroma Goontune LoRA
+RUN echo "Downloading Chroma Goontune LoRA..." && \
+    curl -L -J -o "models/loras/Chroma/1518goontunerank64prodigy.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2194938?type=Model&format=SafeTensor" && \
     echo "Download complete. File size:" && \
-    ls -lh models/loras/comfyui_portrait_lora64.safetensors
+    ls -lh "models/loras/Chroma/1518goontunerank64prodigy.safetensors"
 
-RUN echo "Downloading face lora..." && \
-    curl -L -J -o models/loras/diffusion_pytorch_model.safetensors -H "Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" "https://huggingface.co/Pandorala/PortraitLora/resolve/main/diffusion_pytorch_model.safetensors" && \
+# 2. Absolute Cinema Chroma LoRA
+RUN echo "Downloading Absolute Cinema Chroma LoRA..." && \
+    curl -L -J -o "models/loras/Chroma/CHROMA_Absolute Cinema.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2193551?type=Model&format=SafeTensor" && \
     echo "Download complete. File size:" && \
-    ls -lh models/loras/diffusion_pytorch_model.safetensors
+    ls -lh "models/loras/Chroma/CHROMA_Absolute Cinema.safetensors"
+
+# 3. Painal v1 LoRA
+RUN echo "Downloading Painal v1 LoRA..." && \
+    curl -L -J -o "models/loras/Chroma/painal_v1.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2244823?type=Model&format=SafeTensor" && \
+    echo "Download complete. File size:" && \
+    ls -lh "models/loras/Chroma/painal_v1.safetensors"
+
+# 4. Chroma Unlocked Flash Heun LoRA (from HuggingFace)
+RUN echo "Downloading Chroma Unlocked Flash Heun LoRA..." && \
+    curl -L -J -o "models/loras/Chroma/chroma-unlocked-v47-flash-heun-8steps-cfg1_r96-fp32.safetensors" "https://huggingface.co/silveroxides/Chroma-LoRAs/resolve/main/flash-heun/chroma-unlocked-v47-flash-heun-8steps-cfg1_r96-fp32.safetensors" && \
+    echo "Download complete. File size:" && \
+    ls -lh "models/loras/Chroma/chroma-unlocked-v47-flash-heun-8steps-cfg1_r96-fp32.safetensors"
+
+# 5. Lenovo Chroma LoRA
+RUN echo "Downloading Lenovo Chroma LoRA..." && \
+    curl -L -J -o "models/loras/Chroma/lenovo_chroma.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2299345?type=Model&format=SafeTensor" && \
+    echo "Download complete. File size:" && \
+    ls -lh "models/loras/Chroma/lenovo_chroma.safetensors"
+
+# 6. Chroma Professional Photos LoRA
+RUN echo "Downloading Chroma Professional Photos LoRA..." && \
+    curl -L -J -o "models/loras/Chroma/- Chroma - profphotos_cinematic_atmo_3.0.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2136912?type=Model&format=SafeTensor" && \
+    echo "Download complete. File size:" && \
+    ls -lh "models/loras/Chroma/- Chroma - profphotos_cinematic_atmo_3.0.safetensors"
 
 # Stage 3: Final image
 FROM base AS final
@@ -216,9 +239,17 @@ FROM base AS final
 COPY --from=downloader /comfyui/models /comfyui/models
 
 # Verify models are copied correctly
-RUN echo "Models in final image:" && \
-    ls -la /comfyui/models/checkpoints/ && \
-    echo "SAM models:" && \
-    ls -la /comfyui/models/sams/ && \
-    echo "YOLO models:" && \
-    ls -la /comfyui/models/ultralytics/
+RUN echo "=== Chroma Diffusion Model ===" && \
+    ls -lh /comfyui/models/diffusion_models/ && \
+    echo "=== Pony Checkpoint (Refiner) ===" && \
+    ls -lh /comfyui/models/checkpoints/Pony/ && \
+    echo "=== VAE ===" && \
+    ls -lh /comfyui/models/vae/ && \
+    echo "=== Text Encoders ===" && \
+    ls -lh /comfyui/models/text_encoders/ && \
+    echo "=== SAM model ===" && \
+    ls -lh /comfyui/models/sams/ && \
+    echo "=== YOLO Face Detector ===" && \
+    ls -lh /comfyui/models/ultralytics/bbox/ && \
+    echo "=== Chroma LoRAs ===" && \
+    ls -lh /comfyui/models/loras/Chroma/
