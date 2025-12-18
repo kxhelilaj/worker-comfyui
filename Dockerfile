@@ -154,10 +154,11 @@ RUN mkdir -p models/checkpoints/Pony models/diffusion_models models/text_encoder
 
 # ============================================
 # CHROMA WORKFLOW MODELS - PARALLEL DOWNLOADS
+# Cache bust: v2 - force rebuild 2024-12-18
 # ============================================
 
 # Download all large models in parallel using background processes
-RUN echo "Downloading all models in parallel..." && \
+RUN echo "Downloading all models in parallel v2..." && \
     # Start all downloads in background
     curl -L -J -o models/diffusion_models/Chroma-DC-2K.safetensors "https://huggingface.co/silveroxides/Chroma-Misc-Models/resolve/main/Chroma-DC-2K/Chroma-DC-2K.safetensors" & \
     curl -L -J -o "models/checkpoints/Pony/gonzalomoXLFluxPony_v60PhotoXLDMD.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2368123?type=Model&format=SafeTensor&size=pruned&fp=fp16" & \
