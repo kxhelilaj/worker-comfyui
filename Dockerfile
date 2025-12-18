@@ -188,7 +188,7 @@ RUN echo "Downloading SAM model..." && \
 
 # face_yolov9c for FaceDetailer
 RUN echo "Downloading face_yolov9c..." && \
-    wget -q -O models/ultralytics/bbox/face_yolov9c.pt "https://huggingface.co/amirgame197/face_yolov9c.pt/resolve/main/face_yolov9c.pt" && \
+    wget -q -O models/ultralytics/bbox/face_yolov9c.pt "https://huggingface.co/Bingsu/adetailer/resolve/main/face_yolov9c.pt" && \
     echo "face_yolov9c downloaded:" && \
     ls -lh models/ultralytics/bbox/face_yolov9c.pt
 
