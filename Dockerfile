@@ -153,84 +153,38 @@ WORKDIR /comfyui
 RUN mkdir -p models/checkpoints/Pony models/diffusion_models models/text_encoders models/vae models/sams models/ultralytics/bbox models/loras/Chroma
 
 # ============================================
-# CHROMA WORKFLOW MODELS
+# CHROMA WORKFLOW MODELS - PARALLEL DOWNLOADS
 # ============================================
 
-# Chroma-DC-2K model (main diffusion model)
-RUN echo "Downloading Chroma-DC-2K model..." && \
-    curl -L -J -o models/diffusion_models/Chroma-DC-2K.safetensors "https://huggingface.co/silveroxides/Chroma-Misc-Models/resolve/main/Chroma-DC-2K/Chroma-DC-2K.safetensors" && \
-    echo "Download complete. File size:" && \
-    ls -lh models/diffusion_models/Chroma-DC-2K.safetensors
-
-# gonzalomoXLFluxPony checkpoint (refiner) - v6.0 Photo XL DMD
-RUN echo "Downloading gonzalomoXLFluxPony checkpoint..." && \
-    curl -L -J -o "models/checkpoints/Pony/gonzalomoXLFluxPony_v60PhotoXLDMD.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2368123?type=Model&format=SafeTensor&size=pruned&fp=fp16" && \
-    echo "Download complete. File size:" && \
-    ls -lh "models/checkpoints/Pony/gonzalomoXLFluxPony_v60PhotoXLDMD.safetensors"
-
-# FLUX.1-dev VAE
-RUN echo "Downloading FLUX.1-dev VAE..." && \
-    curl -L -J -o models/vae/FLUX.1-dev-vae.safetensors "https://huggingface.co/lovis93/testllm/resolve/ed9cf1af7465cebca4649157f118e331cf2a084f/ae.safetensors" && \
-    echo "Download complete. File size:" && \
-    ls -lh models/vae/FLUX.1-dev-vae.safetensors
-
-# T5XXL text encoder (for Chroma)
-RUN echo "Downloading text encoder t5xxl_fp16..." && \
-    curl -L -J -o models/text_encoders/t5xxl_fp16.safetensors "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp16.safetensors" && \
-    echo "Download complete. File size:" && \
-    ls -lh models/text_encoders/t5xxl_fp16.safetensors
-
-# SAM model for FaceDetailer
-RUN echo "Downloading SAM model..." && \
-    wget -q -O models/sams/sam_vit_b_01ec64.pth https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth && \
-    echo "SAM model downloaded:" && \
-    ls -lh models/sams/sam_vit_b_01ec64.pth
-
-# face_yolov9c for FaceDetailer
-RUN echo "Downloading face_yolov9c..." && \
-    wget -q -O models/ultralytics/bbox/face_yolov9c.pt "https://huggingface.co/Bingsu/adetailer/resolve/main/face_yolov9c.pt" && \
-    echo "face_yolov9c downloaded:" && \
-    ls -lh models/ultralytics/bbox/face_yolov9c.pt
+# Download all large models in parallel using background processes
+RUN echo "Downloading all models in parallel..." && \
+    # Start all downloads in background
+    curl -L -J -o models/diffusion_models/Chroma-DC-2K.safetensors "https://huggingface.co/silveroxides/Chroma-Misc-Models/resolve/main/Chroma-DC-2K/Chroma-DC-2K.safetensors" & \
+    curl -L -J -o "models/checkpoints/Pony/gonzalomoXLFluxPony_v60PhotoXLDMD.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2368123?type=Model&format=SafeTensor&size=pruned&fp=fp16" & \
+    curl -L -J -o models/vae/FLUX.1-dev-vae.safetensors "https://huggingface.co/lovis93/testllm/resolve/ed9cf1af7465cebca4649157f118e331cf2a084f/ae.safetensors" & \
+    curl -L -J -o models/text_encoders/t5xxl_fp16.safetensors "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp16.safetensors" & \
+    wget -q -O models/sams/sam_vit_b_01ec64.pth https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth & \
+    wget -q -O models/ultralytics/bbox/face_yolov9c.pt "https://huggingface.co/Bingsu/adetailer/resolve/main/face_yolov9c.pt" & \
+    # Wait for all background jobs
+    wait && \
+    echo "Large models downloaded:" && \
+    ls -lh models/diffusion_models/ models/checkpoints/Pony/ models/vae/ models/text_encoders/ models/sams/ models/ultralytics/bbox/
 
 # ============================================
-# CHROMA LORAS
+# CHROMA LORAS - PARALLEL DOWNLOADS
 # ============================================
 
-# 1. Chroma Goontune LoRA
-RUN echo "Downloading Chroma Goontune LoRA..." && \
-    curl -L -J -o "models/loras/Chroma/1518goontunerank64prodigy.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2194938?type=Model&format=SafeTensor" && \
-    echo "Download complete. File size:" && \
-    ls -lh "models/loras/Chroma/1518goontunerank64prodigy.safetensors"
-
-# 2. Absolute Cinema Chroma LoRA
-RUN echo "Downloading Absolute Cinema Chroma LoRA..." && \
-    curl -L -J -o "models/loras/Chroma/CHROMA_Absolute Cinema.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2193551?type=Model&format=SafeTensor" && \
-    echo "Download complete. File size:" && \
-    ls -lh "models/loras/Chroma/CHROMA_Absolute Cinema.safetensors"
-
-# 3. Painal v1 LoRA
-RUN echo "Downloading Painal v1 LoRA..." && \
-    curl -L -J -o "models/loras/Chroma/painal_v1.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2244823?type=Model&format=SafeTensor" && \
-    echo "Download complete. File size:" && \
-    ls -lh "models/loras/Chroma/painal_v1.safetensors"
-
-# 4. Chroma Unlocked Flash Heun LoRA (from HuggingFace)
-RUN echo "Downloading Chroma Unlocked Flash Heun LoRA..." && \
-    curl -L -J -o "models/loras/Chroma/chroma-unlocked-v47-flash-heun-8steps-cfg1_r96-fp32.safetensors" "https://huggingface.co/silveroxides/Chroma-LoRAs/resolve/main/flash-heun/chroma-unlocked-v47-flash-heun-8steps-cfg1_r96-fp32.safetensors" && \
-    echo "Download complete. File size:" && \
-    ls -lh "models/loras/Chroma/chroma-unlocked-v47-flash-heun-8steps-cfg1_r96-fp32.safetensors"
-
-# 5. Lenovo Chroma LoRA
-RUN echo "Downloading Lenovo Chroma LoRA..." && \
-    curl -L -J -o "models/loras/Chroma/lenovo_chroma.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2299345?type=Model&format=SafeTensor" && \
-    echo "Download complete. File size:" && \
-    ls -lh "models/loras/Chroma/lenovo_chroma.safetensors"
-
-# 6. Chroma Professional Photos LoRA
-RUN echo "Downloading Chroma Professional Photos LoRA..." && \
-    curl -L -J -o "models/loras/Chroma/- Chroma - profphotos_cinematic_atmo_3.0.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2136912?type=Model&format=SafeTensor" && \
-    echo "Download complete. File size:" && \
-    ls -lh "models/loras/Chroma/- Chroma - profphotos_cinematic_atmo_3.0.safetensors"
+# Download all LoRAs in parallel
+RUN echo "Downloading all LoRAs in parallel..." && \
+    curl -L -J -o "models/loras/Chroma/1518goontunerank64prodigy.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2194938?type=Model&format=SafeTensor" & \
+    curl -L -J -o "models/loras/Chroma/CHROMA_Absolute Cinema.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2193551?type=Model&format=SafeTensor" & \
+    curl -L -J -o "models/loras/Chroma/painal_v1.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2244823?type=Model&format=SafeTensor" & \
+    curl -L -J -o "models/loras/Chroma/chroma-unlocked-v47-flash-heun-8steps-cfg1_r96-fp32.safetensors" "https://huggingface.co/silveroxides/Chroma-LoRAs/resolve/main/flash-heun/chroma-unlocked-v47-flash-heun-8steps-cfg1_r96-fp32.safetensors" & \
+    curl -L -J -o "models/loras/Chroma/lenovo_chroma.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2299345?type=Model&format=SafeTensor" & \
+    curl -L -J -o "models/loras/Chroma/- Chroma - profphotos_cinematic_atmo_3.0.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2136912?type=Model&format=SafeTensor" & \
+    wait && \
+    echo "LoRAs downloaded:" && \
+    ls -lh models/loras/Chroma/
 
 # Stage 3: Final image
 FROM base AS final
