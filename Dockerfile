@@ -162,9 +162,9 @@ RUN echo "Downloading Chroma-DC-2K model..." && \
     echo "Download complete. File size:" && \
     ls -lh models/diffusion_models/Chroma-DC-2K.safetensors
 
-# gonzalomoXLFluxPony checkpoint (refiner)
+# gonzalomoXLFluxPony checkpoint (refiner) - v6.0 Photo XL DMD
 RUN echo "Downloading gonzalomoXLFluxPony checkpoint..." && \
-    curl -L -J -o "models/checkpoints/Pony/gonzalomoXLFluxPony_v60PhotoXLDMD.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2196785?type=Model&format=SafeTensor&size=pruned&fp=fp16" && \
+    curl -L -J -o "models/checkpoints/Pony/gonzalomoXLFluxPony_v60PhotoXLDMD.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2368123?type=Model&format=SafeTensor&size=pruned&fp=fp16" && \
     echo "Download complete. File size:" && \
     ls -lh "models/checkpoints/Pony/gonzalomoXLFluxPony_v60PhotoXLDMD.safetensors"
 
