@@ -154,11 +154,11 @@ RUN mkdir -p models/checkpoints/Pony models/diffusion_models models/text_encoder
 
 # ============================================
 # CHROMA WORKFLOW MODELS - PARALLEL DOWNLOADS
-# Cache bust: v2 - force rebuild 2024-12-18
+# Cache bust: v3 - fixed CivitAI version IDs 2024-12-19
 # ============================================
 
 # Download all large models in parallel using background processes
-RUN echo "Downloading all models in parallel v2..." && \
+RUN echo "Downloading all models in parallel v3..." && \
     # Start all downloads in background
     curl -L -J -o models/diffusion_models/Chroma-DC-2K.safetensors "https://huggingface.co/silveroxides/Chroma-Misc-Models/resolve/main/Chroma-DC-2K/Chroma-DC-2K.safetensors" & \
     curl -L -J -o "models/checkpoints/Pony/gonzalomoXLFluxPony_v60PhotoXLDMD.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2368123?type=Model&format=SafeTensor&size=pruned&fp=fp16" & \
@@ -177,12 +177,12 @@ RUN echo "Downloading all models in parallel v2..." && \
 
 # Download all LoRAs in parallel
 RUN echo "Downloading all LoRAs in parallel..." && \
-    curl -L -J -o "models/loras/Chroma/1518goontunerank64prodigy.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2194938?type=Model&format=SafeTensor" & \
-    curl -L -J -o "models/loras/Chroma/CHROMA_Absolute Cinema.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2193551?type=Model&format=SafeTensor" & \
-    curl -L -J -o "models/loras/Chroma/painal_v1.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2244823?type=Model&format=SafeTensor" & \
+    curl -L -J -o "models/loras/Chroma/1518goontunerank64prodigy.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2251525?type=Model&format=SafeTensor" & \
+    curl -L -J -o "models/loras/Chroma/CHROMA_Absolute Cinema.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2218641?type=Model&format=SafeTensor" & \
+    curl -L -J -o "models/loras/Chroma/painal_v1.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2267070?type=Model&format=SafeTensor" & \
     curl -L -J -o "models/loras/Chroma/chroma-unlocked-v47-flash-heun-8steps-cfg1_r96-fp32.safetensors" "https://huggingface.co/silveroxides/Chroma-LoRAs/resolve/main/flash-heun/chroma-unlocked-v47-flash-heun-8steps-cfg1_r96-fp32.safetensors" & \
     curl -L -J -o "models/loras/Chroma/lenovo_chroma.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2299345?type=Model&format=SafeTensor" & \
-    curl -L -J -o "models/loras/Chroma/- Chroma - profphotos_cinematic_atmo_3.0.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2136912?type=Model&format=SafeTensor" & \
+    curl -L -J -o "models/loras/Chroma/- Chroma - profphotos_cinematic_atmo_3.0.safetensors" -H "Authorization: Bearer ${CIVITAI_ACCESS_TOKEN}" "https://civitai.com/api/download/models/2271596?type=Model&format=SafeTensor" & \
     wait && \
     echo "LoRAs downloaded:" && \
     ls -lh models/loras/Chroma/
